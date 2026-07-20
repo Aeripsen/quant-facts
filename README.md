@@ -22,9 +22,14 @@ simulations of the past labeled as simulations of the past.
 Any what-should-I-do question is a licensed-advisor question and the tool says
 exactly that. This is enforced in code, not just promised here:
 
-- `compliance.py` holds a banned-phrase list; every report passes through
-  `compliance.guard()` before printing and the run dies with `ComplianceError`
-  rather than emit advisory phrasing in its own voice.
+- `compliance.py` holds a banned-phrase list; every ticker report and the
+  advisor line pass through `compliance.guard()` before printing and the run
+  dies with `ComplianceError` rather than emit advisory phrasing in its own
+  voice. Two fixed strings skip the guard by construction: the `refuse_advice()`
+  refusal (which only ever emits the advisor pointer, and whose output is
+  checked by `test_what_should_i_do_is_refused`) and the `chart -> <path>` line
+  (a filename). The banned-phrase scan in `tests/test_boundary.py` reads every
+  source file, so neither string can drift into advice phrasing unnoticed.
 - Question-shaped CLI input (`should`, `what`, a `?`, a lowercase trade verb)
   gets `refuse_advice()`: the advisor pointer, nothing else.
 - `tests/test_boundary.py` scans every source file, doc file, and rendered
@@ -94,7 +99,7 @@ Ticker format is Yahoo's: `SPY`, `VFV.TO`, `^GSPC`. History ranges: `3mo` to
 
 | File | What it is |
 | --- | --- |
-| `analyze.py` | CLI and report assembly; everything gated through compliance |
+| `analyze.py` | CLI and report assembly; reports gated through compliance |
 | `data.py` | fetch, parse, CSV cache (offline-testable) |
 | `indicators.py` | SMA, EMA, RSI (Wilder), MACD, Bollinger, ATR, in pure Python |
 | `news.py` | RSS headlines as facts, sanitized, quoted, unscored |

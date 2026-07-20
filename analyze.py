@@ -17,8 +17,10 @@ Options:
   --out DIR             chart output directory
 
 This tool never says what to do with money. Ask it a what-should-I-do
-question and it points you at a licensed advisor, by design. Every
-report is gated through compliance.guard before printing.
+question and it points you at a licensed advisor, by design. Every ticker
+report and the advisor line are gated through compliance.guard before
+printing; the two fixed strings that skip it (the refusal pointer and the
+chart-path line) are covered by the boundary tests instead.
 """
 from __future__ import annotations
 

@@ -90,10 +90,22 @@ studied it:
   Their sharper follow-up metric is the Probability of Backtest Overfitting
   (Bailey, Borwein, Lopez de Prado, Zhu, "The Probability of Backtest
   Overfitting", Journal of Computational Finance 20(4), 2017; SSRN 2326253).
-- **Haircut reported Sharpe ratios.** Multiple-testing corrections
+  This tool does not compute PBO; it is cited here as further reading. What the
+  harness does instead is the cheaper honest thing: it prints the raw number of
+  trials so the reader can judge selection risk themselves.
+
+References this section cites but the tool does NOT implement (they are context
+for reading a backtest, not metrics the harness produces):
+
+- **Haircut / deflated Sharpe ratios.** Multiple-testing corrections
   (Bonferroni, Holm, BHY) applied to backtested Sharpe ratios; the flat "cut
   it in half" rule is wrong in both directions. Harvey and Liu (2015), above.
-  [live]
+  [live] The harness computes only a plain annualized mean/sigma Sharpe at
+  rf=0 (see `backtest.py::_sharpe`) and its docstring tells the reader to
+  haircut it mentally; it does not apply any deflation or multiple-testing
+  correction, and no Sharpe number should be quoted as a result.
+- **Probability of Backtest Overfitting (PBO).** Bailey et al. 2017, above.
+  Cited as the rigorous way to quantify overfitting; not implemented here.
 
 ## 4. The classic traps, named
 
