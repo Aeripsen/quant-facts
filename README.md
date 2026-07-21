@@ -59,7 +59,7 @@ them with every run. The caveats it enforces (cited in `RESEARCH.md`):
   (Bonferroni, Holm, BHY), the deflated Sharpe, and the probability of
   backtest overfitting from combinatorially symmetric cross-validation. On
   SPY over ten years the winning rule's train Sharpe of 0.88 haircuts to 0.51
-  once you account for the nine configurations it beat.
+  once you account for the nine-configuration search that produced it.
 - **Survivorship named.** Testing a ticker that still exists already selects
   a winner; the report says so every time.
 

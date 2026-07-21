@@ -137,7 +137,9 @@ under `artifacts/`):
   BHY 0.31 (65%), deflated Sharpe 0.961, PBO 0.404.
 - Eight seeded random walks, 1600 bars, 25 configurations each, where there
   is nothing to find by construction. The Bonferroni haircut takes the
-  searched Sharpe to 0.00 in seven of the eight; the deflated Sharpe falls by
+  searched Sharpe to 0.00 in six of the eight; one walk's best Sharpe was
+  already negative, so there was nothing to haircut, and one survived at
+  0.33. The deflated Sharpe falls by
   0.075 to 0.379 relative to the same rule scored at one trial; PBO ranges
   0.004 to 0.669.
 
