@@ -33,6 +33,7 @@ from statistics import NormalDist
 
 TRADING_DAYS = 252
 EULER_GAMMA = 0.5772156649015329
+PBO_SPLITS = 16
 _N = NormalDist()
 
 
@@ -208,7 +209,7 @@ def _sharpe_from_blocks(blocks: list[tuple[int, float, float]],
     return mean / math.sqrt(var)
 
 
-def pbo(trial_returns: list[list[float]], n_splits: int = 16
+def pbo(trial_returns: list[list[float]], n_splits: int = PBO_SPLITS
         ) -> tuple[float | None, list[float]]:
     """Probability of backtest overfitting by combinatorially symmetric
     cross-validation (Bailey et al. 2017).

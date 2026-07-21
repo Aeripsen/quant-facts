@@ -27,6 +27,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+import overfitting as ov
 from compliance import BACKTEST_DISCLAIMER
 from data import Bars
 from indicators import sma
@@ -80,6 +81,7 @@ class BacktestResult:
     positions: list[int] = field(default_factory=list)
     strat_returns: list[float] = field(default_factory=list)
     market_returns: list[float] = field(default_factory=list)
+    overfit: ov.OverfitStats | None = None
 
 
 def sma_cross_signal(closes: list[float], fast: int, slow: int) -> list[int]:
@@ -127,7 +129,39 @@ def run(bars: Bars, fast: int = 50, slow: int = 200, split: float = 0.7,
                             market, cut, len(series)),
         positions=positions[1:], strat_returns=strat, market_returns=market,
     )
+    result.overfit = _overfit_stats(result, strat[:cut - 1], 1, [], [])
     return result
+
+
+def _overfit_stats(r: BacktestResult, is_returns: list[float], trials: int,
+                   trial_sharpes: list[float],
+                   trial_returns: list[list[float]]) -> ov.OverfitStats | None:
+    """Selection-bias corrections of the in-sample Sharpe, which is the one
+    the parameter search actually maximized. With a single trial there is no
+    selection and these reduce to the uncorrected case, which is the point of
+    reporting them the same way in both."""
+    sharpe = r.in_sample.sharpe
+    if sharpe is None:
+        return None
+    skew, kurt = ov.moments(is_returns)
+    var = ov.trial_sharpe_variance(trial_sharpes)
+    pbo_value, _ = ov.pbo(trial_returns) if len(trial_returns) > 1 else (None,
+                                                                        [])
+    return ov.OverfitStats(
+        sharpe=sharpe,
+        n_obs=len(is_returns),
+        n_trials=trials,
+        skew=skew,
+        kurtosis=kurt,
+        trial_sharpe_variance=var,
+        expected_max_sharpe=ov.expected_max_sharpe(trials, var),
+        deflated_sharpe=ov.deflated_sharpe(sharpe, len(is_returns), skew,
+                                           kurt, trials, var),
+        haircuts=ov.haircut_sharpe(sharpe, len(is_returns), trials,
+                                   trial_sharpes),
+        pbo=pbo_value,
+        pbo_splits=ov.PBO_SPLITS if pbo_value is not None else None,
+    )
 
 
 def _segment(label: str, bars: Bars, positions: list[int],
@@ -167,9 +201,13 @@ def optimize(bars: Bars, fast_grid: tuple[int, ...] = (10, 20, 50),
     """Grid-search fast/slow ON THE TRAIN SEGMENT ONLY, then report the
     winner's untouched test segment. The trials count is carried into the
     report because an unreported trial count is how overfit backtests get
-    sold (Bailey et al. 2014)."""
+    sold (Bailey et al. 2014). Every trial's train Sharpe and full return path
+    is kept, because the haircut and the PBO calculation need the losers too,
+    not just the winner."""
     best: BacktestResult | None = None
     trials = 0
+    trial_sharpes: list[float] = []
+    trial_returns: list[list[float]] = []
     for f in fast_grid:
         for s in slow_grid:
             if f >= s:
@@ -179,11 +217,17 @@ def optimize(bars: Bars, fast_grid: tuple[int, ...] = (10, 20, 50),
             key = r.in_sample.sharpe if r.in_sample.sharpe is not None else -9e9
             best_key = (best.in_sample.sharpe
                         if best and best.in_sample.sharpe is not None else -9e9)
+            if r.in_sample.sharpe is not None:
+                trial_sharpes.append(r.in_sample.sharpe)
+            trial_returns.append(r.strat_returns)
             if best is None or key > best_key:
                 best = r
     if best is None:
         raise ValueError("empty parameter grid")
     best.trials = trials
+    cut = int(len(bars.return_series()) * split)
+    best.overfit = _overfit_stats(best, best.strat_returns[:cut - 1], trials,
+                                  trial_sharpes, trial_returns)
     return best
 
 
@@ -219,12 +263,58 @@ def render_report(r: BacktestResult) -> str:
             "(same bars, no rule; a fact for scale, not a benchmark to"
             " beat)",
         ]
+    if r.overfit is not None:
+        lines += _overfit_lines(r.overfit)
     lines += [
         "",
         "This simulated one past path of one surviving ticker. It is not"
         " a prediction, not an expected return, and not advice.",
     ]
     return "\n".join(lines)
+
+
+def _overfit_lines(o: ov.OverfitStats) -> list[str]:
+    """The selection-bias block: what the search cost the headline Sharpe."""
+    lines = [
+        "",
+        f"--- SELECTION-BIAS CORRECTIONS on the train Sharpe "
+        f"({_num(o.sharpe)}, {o.n_obs} bars, {o.n_trials} trial"
+        f"{'' if o.n_trials == 1 else 's'}) ---",
+    ]
+    for h in o.haircuts:
+        lines.append(
+            f"  {h.method:<11} p {h.p_value:.4f} -> {h.adjusted_p:.4f}   "
+            f"haircut Sharpe {h.haircut_sharpe:.2f}   "
+            f"({h.haircut_fraction:.0%} of it was the search)"
+        )
+    if not o.haircuts:
+        lines.append("  haircut       n/a (a Sharpe at or below zero needs no"
+                     " correction to look bad)")
+    if o.expected_max_sharpe is not None:
+        lines.append(
+            f"  luckiest-of-{o.n_trials} Sharpe on merit-free data: "
+            f"{o.expected_max_sharpe * math.sqrt(TRADING_DAYS):.2f}"
+            " annualized (Bailey and Lopez de Prado 2014)"
+        )
+    lines.append(
+        "  deflated Sharpe  " + (
+            "n/a" if o.deflated_sharpe is None
+            else f"{o.deflated_sharpe:.3f}"
+        ) + "   probability the true Sharpe clears that benchmark,"
+        " skew and kurtosis corrected"
+    )
+    if o.pbo is not None:
+        lines.append(
+            f"  PBO              {o.pbo:.3f}   share of "
+            f"{o.pbo_splits}-block CSCV splits where the in-sample winner"
+            " came out below the out-of-sample median (Bailey et al. 2017)"
+        )
+    else:
+        lines.append(
+            "  PBO              n/a   needs at least two configurations and"
+            " enough bars to split into blocks"
+        )
+    return lines
 
 
 # --- small stat helpers (facts about a finished return list) ---
