@@ -119,10 +119,13 @@ and printed under SELECTION-BIAS CORRECTIONS in every backtest report.
   combinatorially symmetric cross-validation: split the sample into 16
   contiguous blocks, take all 12,870 half-and-half train/test partitions,
   and count the share where the configuration that won in-sample landed at or
-  below the median out-of-sample. Block sums and sums of squares are
-  precomputed so a partition's Sharpe costs 16 lookups instead of a pass over
-  the returns; that is what makes the full combinatorial set affordable in
-  pure Python.
+  below the median out-of-sample. Unlike the haircut and the deflated Sharpe,
+  which read the train segment only, PBO runs over the full sample (train and
+  test), because CSCV needs every block to permute; the report prints its bar
+  count next to the number so the window is not mistaken for the train one.
+  Block sums and sums of squares are precomputed so a partition's Sharpe costs
+  16 lookups instead of a pass over the returns; that is what makes the full
+  combinatorial set affordable in pure Python.
 
 What the numbers looked like when they were first run (both files committed
 under `artifacts/`):

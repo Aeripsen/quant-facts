@@ -65,6 +65,7 @@ class OverfitStats:
     haircuts: tuple[Haircut, ...]
     pbo: float | None = None
     pbo_splits: int | None = None
+    pbo_obs: int | None = None
 
 
 def moments(returns: list[float]) -> tuple[float | None, float | None]:
@@ -215,6 +216,9 @@ def pbo(trial_returns: list[list[float]], n_splits: int = PBO_SPLITS
     cross-validation (Bailey et al. 2017).
 
     Takes one return series per tried configuration, all the same length.
+    Whatever window is handed in is the window this measures; CSCV in the
+    paper runs over the whole available sample, so the caller has to say
+    which bars it passed rather than let the reader assume.
     Splits the sample into n_splits contiguous blocks, and for every way of
     using half the blocks as train and the rest as test, checks where the
     in-sample winner ranked out-of-sample. PBO is the share of partitions

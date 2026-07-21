@@ -140,7 +140,12 @@ def _overfit_stats(r: BacktestResult, is_returns: list[float], trials: int,
     """Selection-bias corrections of the in-sample Sharpe, which is the one
     the parameter search actually maximized. With a single trial there is no
     selection and these reduce to the uncorrected case, which is the point of
-    reporting them the same way in both."""
+    reporting them the same way in both.
+
+    The haircut and the deflated Sharpe read the train bars only. PBO is the
+    exception: CSCV needs the full sample to have blocks to permute, so it
+    spans train and test, and the report prints its bar count separately so
+    the two windows are never confused."""
     sharpe = r.in_sample.sharpe
     if sharpe is None:
         return None
@@ -162,6 +167,8 @@ def _overfit_stats(r: BacktestResult, is_returns: list[float], trials: int,
                                    trial_sharpes),
         pbo=pbo_value,
         pbo_splits=ov.PBO_SPLITS if pbo_value is not None else None,
+        pbo_obs=(min(len(x) for x in trial_returns)
+                 if pbo_value is not None else None),
     )
 
 
@@ -307,8 +314,9 @@ def _overfit_lines(o: ov.OverfitStats) -> list[str]:
     if o.pbo is not None:
         lines.append(
             f"  PBO              {o.pbo:.3f}   share of "
-            f"{o.pbo_splits}-block CSCV splits where the in-sample winner"
-            " came out below the out-of-sample median (Bailey et al. 2017)"
+            f"{o.pbo_splits}-block CSCV splits over the full {o.pbo_obs} bars"
+            " (train and test) where the in-sample winner came out below the"
+            " out-of-sample median (Bailey et al. 2017)"
         )
     else:
         lines.append(

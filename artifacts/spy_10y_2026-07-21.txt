@@ -107,7 +107,7 @@ chronological split at 70%: no shuffling, no test data touched during any parame
   bhy         p 0.0200 -> 0.4136   haircut Sharpe 0.31   (65% of it was the search)
   luckiest-of-9 Sharpe on merit-free data: 0.19 annualized (Bailey and Lopez de Prado 2014)
   deflated Sharpe  0.961   probability the true Sharpe clears that benchmark, skew and kurtosis corrected
-  PBO              0.404   share of 16-block CSCV splits where the in-sample winner came out below the out-of-sample median (Bailey et al. 2017)
+  PBO              0.404   share of 16-block CSCV splits over the full 2511 bars (train and test) where the in-sample winner came out below the out-of-sample median (Bailey et al. 2017)
 
 This simulated one past path of one surviving ticker. It is not a prediction, not an expected return, and not advice.
 
