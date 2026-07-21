@@ -1,0 +1,114 @@
+SPY, 10 years of daily bars, run 2026-07-21.
+First the winning rule scored as the only thing tried, then the same rule as the winner of a 9-configuration search.
+
+=== SPY (USD)  2512 daily bars  2016-07-21 to 2026-07-20
+    source: Yahoo Finance chart API (public, no key)  [today's cache]
+  last close        742.09
+  52w high / low    759.57 / 621.72
+  trailing returns  1m +0.4%   3m +4.8%   6m +7.8%   1y +19.5%   (adjusted close)
+  SMA(20)           744.79   close is below it
+  SMA(50)           744.55   close is below it
+  SMA(200)          697.07   close is above it
+  RSI(14) Wilder    47.5
+  MACD(12,26,9)     line +2.060   signal +2.735   histogram -0.675
+  Bollinger(20,2)   lower 730.27   mid 744.79   upper 759.31   %B 0.41
+  ATR(14) Wilder    8.41   (1.1% of close)
+  ann. vol (3m)     12.9%
+  max drawdown      -33.7%   (deepest peak-to-trough in the window shown)
+  These are descriptive statistics of past prices. None of them predicts anything.
+
+================ READ THIS BEFORE THE NUMBERS ================
+HISTORICAL SIMULATION. NOT A PREDICTION. NOT ADVICE.
+- This replays one rule against one past path of one ticker.
+  The past path happened once; it is not a sample you can buy.
+- Testing a still-listed ticker is itself survivorship-biased:
+  the tickers that died are not in the file.
+- Every extra parameter combination tried raises the odds the
+  result is an overfit artifact (Bailey, Borwein, Lopez de
+  Prado, Zhu 2014). The trials count is printed below; judge
+  the out-of-sample line only, and haircut it mentally.
+- Costs and slippage below are estimates; real fills differ.
+See RESEARCH.md for the cited methodology.
+===============================================================
+
+BACKTEST  SPY  rule: SMA(10) x SMA(100) crossover, long-or-flat, next-bar execution
+costs: 5 bps commission + 5 bps slippage per position change (estimates; real fills differ)
+configurations tried on the train segment: 1
+chronological split at 70%: no shuffling, no test data touched during any parameter choice
+
+--- IN-SAMPLE (train)  2016-07-22 to 2023-07-17  (1757 bars) ---
+  rule    total    +96.1%   CAGR   +10.1%   vol   +11.8%   Sharpe  0.88 (rf=0)
+          max drawdown   -22.2%   position changes 21   time in market 72%
+  hold    total   +135.8%   max drawdown   -33.7%   (same bars, no rule; a fact for scale, not a benchmark to beat)
+--- OUT-OF-SAMPLE (test)  2023-07-18 to 2026-07-20  (754 bars) ---
+  rule    total    +52.2%   CAGR   +15.1%   vol   +11.1%   Sharpe  1.32 (rf=0)
+          max drawdown    -8.4%   position changes 6   time in market 85%
+  hold    total    +70.9%   max drawdown   -18.8%   (same bars, no rule; a fact for scale, not a benchmark to beat)
+
+--- SELECTION-BIAS CORRECTIONS on the train Sharpe (0.88, 1757 bars, 1 trial) ---
+  bonferroni  p 0.0200 -> 0.0200   haircut Sharpe 0.88   (0% of it was the search)
+  luckiest-of-1 Sharpe on merit-free data: 0.00 annualized (Bailey and Lopez de Prado 2014)
+  deflated Sharpe  0.988   probability the true Sharpe clears that benchmark, skew and kurtosis corrected
+  PBO              n/a   needs at least two configurations and enough bars to split into blocks
+
+This simulated one past path of one surviving ticker. It is not a prediction, not an expected return, and not advice.
+
+Facts only. What to DO with these numbers (whether to trade, what, when, how much) is a licensed-advisor question; this tool does not answer it.
+
+########################################
+
+=== SPY (USD)  2512 daily bars  2016-07-21 to 2026-07-20
+    source: Yahoo Finance chart API (public, no key)  [today's cache]
+  last close        742.09
+  52w high / low    759.57 / 621.72
+  trailing returns  1m +0.4%   3m +4.8%   6m +7.8%   1y +19.5%   (adjusted close)
+  SMA(20)           744.79   close is below it
+  SMA(50)           744.55   close is below it
+  SMA(200)          697.07   close is above it
+  RSI(14) Wilder    47.5
+  MACD(12,26,9)     line +2.060   signal +2.735   histogram -0.675
+  Bollinger(20,2)   lower 730.27   mid 744.79   upper 759.31   %B 0.41
+  ATR(14) Wilder    8.41   (1.1% of close)
+  ann. vol (3m)     12.9%
+  max drawdown      -33.7%   (deepest peak-to-trough in the window shown)
+  These are descriptive statistics of past prices. None of them predicts anything.
+
+================ READ THIS BEFORE THE NUMBERS ================
+HISTORICAL SIMULATION. NOT A PREDICTION. NOT ADVICE.
+- This replays one rule against one past path of one ticker.
+  The past path happened once; it is not a sample you can buy.
+- Testing a still-listed ticker is itself survivorship-biased:
+  the tickers that died are not in the file.
+- Every extra parameter combination tried raises the odds the
+  result is an overfit artifact (Bailey, Borwein, Lopez de
+  Prado, Zhu 2014). The trials count is printed below; judge
+  the out-of-sample line only, and haircut it mentally.
+- Costs and slippage below are estimates; real fills differ.
+See RESEARCH.md for the cited methodology.
+===============================================================
+
+BACKTEST  SPY  rule: SMA(10) x SMA(100) crossover, long-or-flat, next-bar execution
+costs: 5 bps commission + 5 bps slippage per position change (estimates; real fills differ)
+configurations tried on the train segment: 9  (parameters were chosen on train data; only the test line below is out-of-sample)
+chronological split at 70%: no shuffling, no test data touched during any parameter choice
+
+--- IN-SAMPLE (train)  2016-07-22 to 2023-07-17  (1757 bars) ---
+  rule    total    +96.1%   CAGR   +10.1%   vol   +11.8%   Sharpe  0.88 (rf=0)
+          max drawdown   -22.2%   position changes 21   time in market 72%
+  hold    total   +135.8%   max drawdown   -33.7%   (same bars, no rule; a fact for scale, not a benchmark to beat)
+--- OUT-OF-SAMPLE (test)  2023-07-18 to 2026-07-20  (754 bars) ---
+  rule    total    +52.2%   CAGR   +15.1%   vol   +11.1%   Sharpe  1.32 (rf=0)
+          max drawdown    -8.4%   position changes 6   time in market 85%
+  hold    total    +70.9%   max drawdown   -18.8%   (same bars, no rule; a fact for scale, not a benchmark to beat)
+
+--- SELECTION-BIAS CORRECTIONS on the train Sharpe (0.88, 1757 bars, 9 trials) ---
+  bonferroni  p 0.0200 -> 0.1802   haircut Sharpe 0.51   (42% of it was the search)
+  holm        p 0.0200 -> 0.1802   haircut Sharpe 0.51   (42% of it was the search)
+  bhy         p 0.0200 -> 0.4136   haircut Sharpe 0.31   (65% of it was the search)
+  luckiest-of-9 Sharpe on merit-free data: 0.19 annualized (Bailey and Lopez de Prado 2014)
+  deflated Sharpe  0.961   probability the true Sharpe clears that benchmark, skew and kurtosis corrected
+  PBO              0.404   share of 16-block CSCV splits where the in-sample winner came out below the out-of-sample median (Bailey et al. 2017)
+
+This simulated one past path of one surviving ticker. It is not a prediction, not an expected return, and not advice.
+
+Facts only. What to DO with these numbers (whether to trade, what, when, how much) is a licensed-advisor question; this tool does not answer it.

@@ -1,0 +1,21 @@
+selection bias on data with no edge in it
+generated 2026-07-21 by selection_bias_demo.py
+
+8 seeded geometric random walks, 1600 bars each, 25 SMA-crossover configurations searched on the first 70% of each.
+There is no signal in a random walk, so every train Sharpe below is selection, and the corrected columns are what says so.
+
+ seed       rule  train SR  bonf 1  bonf 25   DSR 1  DSR 25    PBO  test SR
+    7   10x100        0.85    0.85     0.00   0.962   0.887  0.420     0.16
+    4   40x60         0.73    0.73     0.00   0.938   0.810  0.492    -1.47
+    9    5x200        0.30    0.30     0.00   0.737   0.398  0.636     0.22
+   13    5x80         0.93    0.93     0.00   0.975   0.819  0.110    -0.01
+   21    5x200       -0.22     n/a      n/a   0.325   0.068  0.669    -0.63
+   33   40x60         0.31    0.31     0.00   0.744   0.365  0.296    -0.57
+   42   40x60         0.45    0.45     0.00   0.828   0.574  0.652     0.23
+   55   40x200        1.11    1.11     0.33   0.990   0.900  0.004     1.35
+
+deflated Sharpe drop from 1 trial to 25: min 0.075, mean 0.210, max 0.379
+PBO across the same searches: min 0.004, mean 0.410, max 0.669
+
+bonf 1 / bonf 25 are the Bonferroni haircut Sharpe at one trial and at 25; DSR is the deflated Sharpe (probability the true Sharpe clears the luckiest-of-N benchmark).
+PBO on independent noise sits near 0.5 with a wide spread across seeds; a single value is not a verdict, which is why the spread is printed with it.
