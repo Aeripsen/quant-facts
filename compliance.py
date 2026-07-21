@@ -67,8 +67,9 @@ HISTORICAL SIMULATION. NOT A PREDICTION. NOT ADVICE.
   the tickers that died are not in the file.
 - Every extra parameter combination tried raises the odds the
   result is an overfit artifact (Bailey, Borwein, Lopez de
-  Prado, Zhu 2014). The trials count is printed below; judge
-  the out-of-sample line only, and haircut it mentally.
+  Prado, Zhu 2014). The trials count is printed below, along
+  with the multiple-testing haircut, the deflated Sharpe and
+  the probability of backtest overfitting for that search.
 - Costs and slippage below are estimates; real fills differ.
 See RESEARCH.md for the cited methodology.
 ==============================================================="""

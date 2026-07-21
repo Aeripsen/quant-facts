@@ -90,22 +90,61 @@ studied it:
   Their sharper follow-up metric is the Probability of Backtest Overfitting
   (Bailey, Borwein, Lopez de Prado, Zhu, "The Probability of Backtest
   Overfitting", Journal of Computational Finance 20(4), 2017; SSRN 2326253).
-  This tool does not compute PBO; it is cited here as further reading. What the
-  harness does instead is the cheaper honest thing: it prints the raw number of
-  trials so the reader can judge selection risk themselves.
 
-References this section cites but the tool does NOT implement (they are context
-for reading a backtest, not metrics the harness produces):
+## 3b. The selection-bias corrections, as implemented
 
-- **Haircut / deflated Sharpe ratios.** Multiple-testing corrections
-  (Bonferroni, Holm, BHY) applied to backtested Sharpe ratios; the flat "cut
-  it in half" rule is wrong in both directions. Harvey and Liu (2015), above.
-  [live] The harness computes only a plain annualized mean/sigma Sharpe at
-  rf=0 (see `backtest.py::_sharpe`) and its docstring tells the reader to
-  haircut it mentally; it does not apply any deflation or multiple-testing
-  correction, and no Sharpe number should be quoted as a result.
-- **Probability of Backtest Overfitting (PBO).** Bailey et al. 2017, above.
-  Cited as the rigorous way to quantify overfitting; not implemented here.
+These three were cited here for months as further reading while the harness
+printed only a raw trial count. They are now computed, in `overfitting.py`,
+and printed under SELECTION-BIAS CORRECTIONS in every backtest report.
+
+- **Multiple-testing haircut.** Harvey and Liu (2015), above. The Sharpe
+  becomes a t-statistic (SR per bar times sqrt of the bar count), the
+  two-sided p-value is adjusted for the number of tests, and the adjusted
+  p-value maps back to a Sharpe through the same transform. Bonferroni needs
+  only the trial count. Holm and BHY need the p-value of every trial, so they
+  are computed only when the optimizer hands over the whole grid, which it
+  now does; inventing the unobserved tests would be inventing the answer. For
+  the single best of a grid Holm coincides with Bonferroni by construction,
+  and BHY (the Benjamini-Hochberg-Yekutieli step-up, which is what Harvey and
+  Liu use for false-discovery control) is the harsher of the three here.
+- **Deflated Sharpe ratio.** Bailey and Lopez de Prado (2014), "The Deflated
+  Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting and
+  Non-Normality", Journal of Portfolio Management 40(5); SSRN 2460551. The
+  probabilistic Sharpe ratio evaluated against E[max SR] over N trials
+  instead of against zero, with the skew and kurtosis correction from the
+  same paper. E[max SR] uses the Gumbel approximation with the variance of
+  the trial Sharpes the optimizer measured, so with one trial it is zero and
+  the metric reduces to the uncorrected probabilistic Sharpe.
+- **Probability of backtest overfitting.** Bailey et al. (2017), above, by
+  combinatorially symmetric cross-validation: split the sample into 16
+  contiguous blocks, take all 12,870 half-and-half train/test partitions,
+  and count the share where the configuration that won in-sample landed at or
+  below the median out-of-sample. Block sums and sums of squares are
+  precomputed so a partition's Sharpe costs 16 lookups instead of a pass over
+  the returns; that is what makes the full combinatorial set affordable in
+  pure Python.
+
+What the numbers looked like when they were first run (both files committed
+under `artifacts/`):
+
+- SPY, ten years of daily bars, the winning 10x100 rule scored twice. As the
+  only rule tried: train Sharpe 0.88, Bonferroni haircut 0.88, deflated
+  Sharpe 0.988. As the winner of the 9-configuration grid, on the same bars
+  with the same Sharpe: Bonferroni and Holm 0.51 (42% of it was the search),
+  BHY 0.31 (65%), deflated Sharpe 0.961, PBO 0.404.
+- Eight seeded random walks, 1600 bars, 25 configurations each, where there
+  is nothing to find by construction. The Bonferroni haircut takes the
+  searched Sharpe to 0.00 in seven of the eight; the deflated Sharpe falls by
+  0.075 to 0.379 relative to the same rule scored at one trial; PBO ranges
+  0.004 to 0.669.
+
+Two honest caveats that came out of running it rather than reading it. PBO on
+a field of independent noise strategies sits near 0.5 but with a very wide
+spread across seeds, so a single PBO value is a weak signal and the test suite
+pins the gap between populations rather than any one number. And the deflated
+Sharpe moves less than expected on an SMA grid, because 25 crossover rules on
+one price series are highly correlated and the variance of their Sharpes is
+small; the haircut is the sharper instrument on a grid this correlated.
 
 ## 4. The classic traps, named
 
@@ -114,7 +153,8 @@ The failure catalog every credible quant leads with, and this tool prints:
 1. **Backtest overfitting / selection bias.** Try enough parameter
    combinations and a random-walk dataset will hand you a beautiful equity
    curve. Unreported trials are how it gets sold (Bailey et al. 2014). The
-   harness counts and prints trials, fits on train only.
+   harness counts and prints trials, fits on train only, and prices the
+   search with the corrections in section 3b.
 2. **Survivorship bias.** Datasets of currently-listed tickers exclude the
    ones that died, biasing history upward. Documented for mutual funds by
    Elton, Gruber and Blake (1996), "Survivorship Bias and Mutual Fund
@@ -137,8 +177,8 @@ The failure catalog every credible quant leads with, and this tool prints:
 - Compute the published indicator set, exactly as defined, and stop there:
   no composite scores, no signals dressed as insight.
 - Backtests: chronological split, next-bar execution, costs on, trials
-  printed, out-of-sample labeled, disclaimer boxed at the top. One past path
-  of one survivor, and it says so.
+  printed and then haircut, deflated and PBO-scored, out-of-sample labeled,
+  disclaimer boxed at the top. One past path of one survivor, and it says so.
 - News: headlines are reproduced with source and date, unscored. Deciding
   what news means for money is judgment, and judgment is out of scope by
   design.

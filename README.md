@@ -51,10 +51,15 @@ them with every run. The caveats it enforces (cited in `RESEARCH.md`):
   is a single path, not a distribution.
 - **Costs charged.** Commission plus slippage in basis points on every
   position change. Zero-cost backtests flatter high-turnover rules.
-- **Trials counted.** `--optimize` fits parameters on the train segment only
-  and prints how many configurations were tried, because the odds that the
-  best backtest is an overfit artifact rise with every trial (Bailey, Borwein,
-  Lopez de Prado, Zhu 2014).
+- **Trials counted, then charged for.** `--optimize` fits parameters on the
+  train segment only and prints how many configurations were tried, because
+  the odds that the best backtest is an overfit artifact rise with every
+  trial (Bailey, Borwein, Lopez de Prado, Zhu 2014). Every report then prints
+  what the search cost: the multiple-testing haircut of the Sharpe
+  (Bonferroni, Holm, BHY), the deflated Sharpe, and the probability of
+  backtest overfitting from combinatorially symmetric cross-validation. On
+  SPY over ten years the winning rule's train Sharpe of 0.88 haircuts to 0.51
+  once you account for the nine configurations it beat.
 - **Survivorship named.** Testing a ticker that still exists already selects
   a winner; the report says so every time.
 
@@ -79,6 +84,9 @@ python analyze.py SPY --backtest 50,200 --cost-bps 5 --slip-bps 5
 
 # grid-search fast/slow on the train segment only, report the test segment
 python analyze.py SPY --optimize --split 0.7
+
+# what the same search does to data with no edge in it (offline, seeded)
+python selection_bias_demo.py
 ```
 
 Ticker format is Yahoo's: `SPY`, `VFV.TO`, `^GSPC`. History ranges: `3mo` to
@@ -104,10 +112,13 @@ Ticker format is Yahoo's: `SPY`, `VFV.TO`, `^GSPC`. History ranges: `3mo` to
 | `indicators.py` | SMA, EMA, RSI (Wilder), MACD, Bollinger, ATR, in pure Python |
 | `news.py` | RSS headlines as facts, sanitized, quoted, unscored |
 | `backtest.py` | the honest harness: split, next-bar execution, costs, trials |
+| `overfitting.py` | what the search cost: haircut Sharpe, deflated Sharpe, PBO |
+| `selection_bias_demo.py` | runs the grid over seeded random walks; writes `artifacts/` |
 | `charts.py` | matplotlib PNG, dataviz-method palette, three panels |
 | `compliance.py` | the boundary: banned phrases, guard, refusal |
 | `RESEARCH.md` | what professionals actually use, cited, traps included |
-| `tests/` | 40+ pytest tests, all offline and synthetic |
+| `artifacts/` | committed output of real runs, dated, not regenerated silently |
+| `tests/` | 50+ pytest tests, all offline and synthetic |
 
 Run checks from the repo root:
 

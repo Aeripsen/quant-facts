@@ -12,10 +12,11 @@ What "honest" means here, mechanically (citations in RESEARCH.md):
 - Costs are charged. Every position change pays commission plus
   slippage (in basis points of traded notional). Zero-cost backtests
   systematically flatter high-turnover rules.
-- Trials are counted. When the optimizer grid-searches parameters it
-  fits on TRAIN ONLY and reports how many configurations were tried,
-  because the probability that the best backtest is an overfit artifact
-  rises with every trial (Bailey, Borwein, Lopez de Prado, Zhu 2014).
+- Trials are counted and then charged for. The optimizer fits on TRAIN
+  ONLY and reports how many configurations were tried, and `overfitting.py`
+  turns that count into a multiple-testing haircut of the Sharpe, a
+  deflated Sharpe, and a probability of backtest overfitting (Harvey and
+  Liu 2015; Bailey, Borwein, Lopez de Prado, Zhu 2014 and 2017).
 - Survivorship is named. Testing a still-listed ticker already selects
   a survivor; the harness says so in every report.
 
@@ -342,9 +343,9 @@ def _ann_vol(returns: list[float]) -> float | None:
 
 
 def _sharpe(returns: list[float]) -> float | None:
-    """Annualized mean over stdev at zero risk-free rate. Reported to two
-    decimals and taken with salt: on one path it is a description, not a
-    quality score (Harvey and Liu 2015 on haircutting these)."""
+    """Annualized mean over stdev at zero risk-free rate. The raw number, on
+    one path: a description, not a quality score. `overfitting.py` is what
+    turns it into something quotable after a search."""
     vol = _ann_vol(returns)
     if not vol:
         return None
