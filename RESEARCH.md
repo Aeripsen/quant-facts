@@ -151,6 +151,50 @@ Sharpe moves less than expected on an SMA grid, because 25 crossover rules on
 one price series are highly correlated and the variance of their Sharpes is
 small; the haircut is the sharper instrument on a grid this correlated.
 
+## 3c. Walk-forward analysis, as implemented
+
+The single chronological split evaluates one pick once. Walk-forward
+analysis evaluates the *procedure*: re-pick the best configuration on a
+training window, trade it on the following bars, roll, repeat, so that every
+traded bar is out of sample for the pick that traded it. The canonical
+treatment is Pardo, "Design, Testing, and Optimization of Trading Systems",
+Wiley 1992, revised as "The Evaluation and Optimization of Trading
+Strategies", Wiley 2008. Implemented in `walkforward.py`, printed by
+`--walkforward TRAIN,TEST`, rolling by default with `--anchored` growing the
+window from the first bar instead.
+
+Mechanics that keep it honest:
+
+- The stitched path is simulated as one position series, so a re-fit switch
+  where the incoming rule disagrees with the outgoing one pays the same
+  per-change cost as any other trade. Stitching per-window returns without
+  charging the seam is a quiet way to get walk-forward wrong.
+- The frozen comparison holds the FIRST window's pick to the end. Its
+  picking data also precedes every traded bar, so refit vs frozen is a fair
+  comparison on identical bars and identical costs, and "does re-fitting
+  earn its switch costs" becomes a printed fact per run.
+- Pardo's walk-forward efficiency (out-of-sample over in-sample annualized
+  return) is deliberately not printed: it is a ratio of two one-path
+  numbers that reads like a verdict. The report prints both paths and the
+  pick sequence instead.
+- What walk-forward does not fix is printed with every report: each
+  window's pick is still the luckiest of N trials on its own train window,
+  and the walk-forward configuration (window lengths, grid) is an analyst
+  choice, so searching many configurations and quoting the best recreates
+  exactly the selection bias of section 3b one level up (Bailey et al.
+  2014 applies to the meta-search too).
+
+What the numbers looked like when it was first run (committed under
+`artifacts/`): SPY, ten years of daily bars ending 2026-07-22, a 756-bar
+rolling train window re-searching the 9-configuration grid every 126 bars.
+Fourteen windows; the pick changed at 3 of 13 boundaries (10x100 for eight
+windows, then 50x150 once, 50x200 for three, 20x200 for the last two). Refit finished
+at +95.4% (Sharpe 0.76), frozen 10x100 at +121.9% (Sharpe 0.98), hold
++174.9% on the same bars: on this path, this grid and these windows,
+re-fitting subtracted 26.4 points, and the report says exactly that and no
+more. Parameter instability is visible either way: four distinct winners
+across seven years is the fact a single split cannot show.
+
 ## 4. The classic traps, named
 
 The failure catalog every credible quant leads with, and this tool prints:

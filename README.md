@@ -60,6 +60,13 @@ them with every run. The caveats it enforces (cited in `RESEARCH.md`):
   backtest overfitting from combinatorially symmetric cross-validation. On
   SPY over ten years the winning rule's train Sharpe of 0.88 haircuts to 0.51
   once you account for the nine-configuration search that produced it.
+- **Walk-forward, stitched honestly.** `--walkforward` re-picks the rule on a
+  rolling train window and trades each pick on the bars that follow, switch
+  costs charged at every boundary, so every traded bar is out of sample for
+  the pick that traded it. A frozen line holds the first pick over the same
+  bars, which turns "does re-fitting help" from an assumption into a printed
+  fact. On the same ten years of SPY, re-fitting changed the rule at 3 of 13
+  boundaries and finished 26 points behind the frozen pick.
 - **Survivorship named.** Testing a ticker that still exists already selects
   a winner; the report says so every time.
 
@@ -84,6 +91,9 @@ python analyze.py SPY --backtest 50,200 --cost-bps 5 --slip-bps 5
 
 # grid-search fast/slow on the train segment only, report the test segment
 python analyze.py SPY --optimize --split 0.7
+
+# walk-forward: re-pick the rule every 126 bars on the trailing 756, trade forward
+python analyze.py SPY --range 10y --walkforward 756,126
 
 # what the same search does to data with no edge in it (offline, seeded)
 python selection_bias_demo.py
@@ -113,6 +123,7 @@ Ticker format is Yahoo's: `SPY`, `VFV.TO`, `^GSPC`. History ranges: `3mo` to
 | `news.py` | RSS headlines as facts, sanitized, quoted, unscored |
 | `backtest.py` | the honest harness: split, next-bar execution, costs, trials |
 | `overfitting.py` | what the search cost: haircut Sharpe, deflated Sharpe, PBO |
+| `walkforward.py` | rolling re-optimization; every traded bar out of sample, refit vs frozen |
 | `selection_bias_demo.py` | runs the grid over seeded random walks; writes `artifacts/` |
 | `charts.py` | matplotlib PNG, dataviz-method palette, three panels |
 | `compliance.py` | the boundary: banned phrases, guard, refusal |

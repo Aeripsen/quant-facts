@@ -1,0 +1,76 @@
+﻿=== SPY (USD)  2513 daily bars  2016-07-22 to 2026-07-22
+    source: Yahoo Finance chart API (public, no key)
+  last close        748.30
+  52w high / low    759.57 / 621.72
+  trailing returns  1m +0.5%   3m +6.6%   6m +11.0%   1y +20.3%   (adjusted close)
+  SMA(20)           745.72   close is above it
+  SMA(50)           745.09   close is above it
+  SMA(200)          697.87   close is above it
+  RSI(14) Wilder    52.5
+  MACD(12,26,9)     line +1.904   signal +2.448   histogram -0.545
+  Bollinger(20,2)   lower 732.04   mid 745.72   upper 759.40   %B 0.59
+  ATR(14) Wilder    7.98   (1.1% of close)
+  ann. vol (3m)     12.9%
+  max drawdown      -33.7%   (deepest peak-to-trough in the window shown)
+  These are descriptive statistics of past prices. None of them predicts anything.
+
+================ READ THIS BEFORE THE NUMBERS ================
+HISTORICAL SIMULATION. NOT A PREDICTION. NOT ADVICE.
+- This replays one rule against one past path of one ticker.
+  The past path happened once; it is not a sample you can buy.
+- Testing a still-listed ticker is itself survivorship-biased:
+  the tickers that died are not in the file.
+- Every extra parameter combination tried raises the odds the
+  result is an overfit artifact (Bailey, Borwein, Lopez de
+  Prado, Zhu 2014). The trials count is printed below, along
+  with the multiple-testing haircut, the deflated Sharpe and
+  the probability of backtest overfitting for that search.
+- Costs and slippage below are estimates; real fills differ.
+See RESEARCH.md for the cited methodology.
+===============================================================
+
+WALK-FORWARD  SPY  rule family: SMA(fast) x SMA(slow) crossover, long-or-flat, next-bar execution
+costs: 5 bps commission + 5 bps slippage per position change, including the change a re-fit switch forces
+rolling 756-bar train window, 126-bar test step, 9 configurations re-searched per window
+every test bar is out of sample for the pick that traded it: each window's rule was chosen on bars strictly before that window
+
+--- PICKS, WINDOW BY WINDOW ---
+   w  train span                 picked  train SR  test span                 test ret
+   1  2016-07-22..2019-07-24   10x100       1.17  2019-07-25..2020-01-23      +7.2%
+   2  2017-01-23..2020-01-23   10x100       1.28  2020-01-24..2020-07-23      +0.8%
+   3  2017-07-24..2020-07-23   10x100       0.82  2020-07-24..2021-01-22     +19.5%
+   4  2018-01-23..2021-01-22   10x100       0.83  2021-01-25..2021-07-23     +15.7%
+   5  2018-07-24..2021-07-23   10x100       1.32  2021-07-26..2022-01-21      -1.6%
+   6  2019-01-24..2022-01-21   10x100       1.25  2022-01-24..2022-07-25      -4.3%
+   7  2019-07-25..2022-07-25   10x100       0.90  2022-07-26..2023-01-24      -8.0%
+   8  2020-01-24..2023-01-24   10x100       0.52  2023-01-25..2023-07-26     +12.8%
+   9  2020-07-24..2023-07-26   50x150       1.25  2023-07-27..2024-01-25      +6.8%  *
+  10  2021-01-25..2024-01-25   50x200       1.03  2024-01-26..2024-07-26     +12.3%  *
+  11  2021-07-26..2024-07-26   50x200       0.97  2024-07-29..2025-01-28     +11.8%
+  12  2022-01-24..2025-01-28   50x200       1.27  2025-01-29..2025-07-30     -10.2%
+  13  2022-07-26..2025-07-30   20x200       1.45  2025-07-31..2026-01-29     +10.0%  *
+  14  2023-01-25..2026-01-29   20x200       1.61  2026-01-30..2026-07-22      +1.1%
+      * the pick changed entering this window
+      the last window ran out of data at 119 bars
+
+--- STITCHED OUT-OF-SAMPLE PATH  2019-07-25 to 2026-07-22  (1757 bars) ---
+  refit   total    +95.4%   CAGR   +10.1%   vol   +14.0%   Sharpe  0.76 (rf=0)
+          max drawdown   -22.2%   position changes 23   time in market 81%
+  frozen  total   +121.9%   CAGR   +12.1%   vol   +12.5%   Sharpe  0.98 (rf=0)
+          max drawdown   -22.2%   position changes 23   time in market 78%
+  frozen = the first window's pick (10x100) held to the end; its picking data also precedes every bar above
+  hold    total   +174.9%   max drawdown   -33.7%   (same bars, no rule; a fact for scale, not a benchmark to beat)
+
+--- WHAT RE-FITTING DID ---
+  the pick changed at 3 of 13 boundaries; 4 distinct rules picked across 14 windows
+  refit minus frozen, total return on identical bars and costs: -26.4 points
+  (one path: that difference is a fact about this path, not evidence re-fitting adds or subtracts anything in general)
+
+--- WHAT WALK-FORWARD DOES NOT FIX ---
+  each window's pick is still the luckiest of 9 trials on its own train window
+  the window lengths and the grid are analyst choices; searching many walk-forward configurations and quoting the best one recreates the selection bias this harness measures
+  this is still one path of one surviving ticker
+
+This simulated one past path of one surviving ticker. It is not a prediction, not an expected return, and not advice.
+
+Facts only. What to DO with these numbers (whether to trade, what, when, how much) is a licensed-advisor question; this tool does not answer it.
