@@ -11,6 +11,8 @@ Options:
   --backtest FAST,SLOW  run the honest SMA-crossover backtest
   --optimize            grid-search fast/slow on train data only
   --split 0.7           chronological train/test split fraction
+  --walkforward TR,TE   re-pick the rule every TE bars on the trailing TR
+  --anchored            walk-forward trains from the first bar, not a window
   --cost-bps 5          commission per position change, basis points
   --slip-bps 5          slippage per position change, basis points
   --refresh             ignore today's cache, refetch
@@ -33,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import backtest as bt  # noqa: E402
 import compliance  # noqa: E402
 import indicators as ind  # noqa: E402
+import walkforward as wfa  # noqa: E402
 from data import PROVIDER, Bars, get_bars  # noqa: E402
 from news import Headline, fetch_news, render_news  # noqa: E402
 
@@ -107,7 +110,9 @@ def facts_block(bars: Bars, from_cache: bool) -> str:
 
 def build_ticker_report(bars: Bars, from_cache: bool = False,
                         news_items: list[Headline] | None = None,
-                        backtest_result: bt.BacktestResult | None = None) -> str:
+                        backtest_result: bt.BacktestResult | None = None,
+                        walkforward_result: wfa.WalkForwardResult | None = None,
+                        ) -> str:
     """Assemble one ticker's full report and gate it through the money
     boundary. Raises ComplianceError rather than ever printing advice."""
     parts = [facts_block(bars, from_cache)]
@@ -115,6 +120,8 @@ def build_ticker_report(bars: Bars, from_cache: bool = False,
         parts.append(render_news(bars.symbol, news_items))
     if backtest_result is not None:
         parts.append(bt.render_report(backtest_result))
+    if walkforward_result is not None:
+        parts.append(wfa.render_report(walkforward_result))
     return compliance.guard("\n\n".join(parts))
 
 
@@ -141,6 +148,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--chart", action="store_true")
     ap.add_argument("--backtest", metavar="FAST,SLOW")
     ap.add_argument("--optimize", action="store_true")
+    ap.add_argument("--walkforward", metavar="TRAIN,TEST")
+    ap.add_argument("--anchored", action="store_true")
     ap.add_argument("--split", type=float, default=0.7)
     ap.add_argument("--cost-bps", type=float, default=5.0)
     ap.add_argument("--slip-bps", type=float, default=5.0)
@@ -184,7 +193,13 @@ def main(argv: list[str] | None = None) -> int:
             fast, slow = (int(x) for x in args.backtest.split(","))
             result = bt.run(bars, fast=fast, slow=slow, split=args.split,
                             costs=costs)
-        print(build_ticker_report(bars, cached, news_items, result))
+        wf_result = None
+        if args.walkforward:
+            train_n, test_n = (int(x) for x in args.walkforward.split(","))
+            wf_result = wfa.run(bars, train_bars=train_n, test_bars=test_n,
+                                costs=costs, anchored=args.anchored)
+        print(build_ticker_report(bars, cached, news_items, result,
+                                  wf_result))
         if args.chart:
             from charts import render_indicator_chart
             out = args.out / f"{bars.symbol}_indicators.png" if args.out else None
