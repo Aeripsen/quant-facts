@@ -1,5 +1,7 @@
 # quant-facts - read-only market analysis (facts, never advice)
 
+[![ci](https://github.com/Aeripsen/quant-facts/actions/workflows/ci.yml/badge.svg)](https://github.com/Aeripsen/quant-facts/actions/workflows/ci.yml)
+
 A small, dependency-light toolkit that fetches public daily price history for a
 watchlist, computes the standard technical indicators, lists news headlines as
 published, and runs an honest backtest of a simple rule. It informs a decision;
