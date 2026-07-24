@@ -1,0 +1,7 @@
+# Pin the lint rules to ruff's classic default (E4, E7, E9, F).
+# ruff 0.16 widened the default set (added ISC, BLE, DTZ, RUF, I) so CI started
+# failing on style rules the code never opted into. Freezing the selection keeps
+# CI checking the same thing across ruff releases, and keeps the sys.path-shim
+# "# noqa: E402" in analyze.py meaningful (E402 stays enabled here).
+[lint]
+select = ["E4", "E7", "E9", "F"]
