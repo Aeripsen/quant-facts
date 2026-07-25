@@ -99,6 +99,9 @@ python analyze.py SPY --range 10y --walkforward 756,126
 
 # what the same search does to data with no edge in it (offline, seeded)
 python selection_bias_demo.py
+
+# and what walking that search forward earns on the same merit-free walks
+python walkforward_noise_demo.py
 ```
 
 Ticker format is Yahoo's: `SPY`, `VFV.TO`, `^GSPC`. History ranges: `3mo` to
@@ -127,6 +130,7 @@ Ticker format is Yahoo's: `SPY`, `VFV.TO`, `^GSPC`. History ranges: `3mo` to
 | `overfitting.py` | what the search cost: haircut Sharpe, deflated Sharpe, PBO |
 | `walkforward.py` | rolling re-optimization; every traded bar out of sample, refit vs frozen |
 | `selection_bias_demo.py` | runs the grid over seeded random walks; writes `artifacts/` |
+| `walkforward_noise_demo.py` | walk-forward on the same merit-free walks: no edge to rescue, picks churn |
 | `charts.py` | matplotlib PNG, dataviz-method palette, three panels |
 | `compliance.py` | the boundary: banned phrases, guard, refusal |
 | `RESEARCH.md` | what professionals actually use, cited, traps included |

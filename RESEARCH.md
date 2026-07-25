@@ -184,6 +184,13 @@ Mechanics that keep it honest:
   exactly the selection bias of section 3b one level up (Bailey et al.
   2014 applies to the meta-search too).
 
+The negative control (committed as `artifacts/walkforward_random_walk.txt`):
+the same 756/126 configuration over the eight seeded merit-free walks earns a
+refit Sharpe of -0.34 on average (seed spread -1.10 to +1.03) with picks
+churning at up to 5 of 6 boundaries. Walk-forward stops in-sample luck from
+reaching the headline; it cannot conjure a return that was never in the data,
+and running the control is what separates that claim from an assumption.
+
 What the numbers looked like when it was first run (committed under
 `artifacts/`): SPY, ten years of daily bars ending 2026-07-22, a 756-bar
 rolling train window re-searching the 9-configuration grid every 126 bars.

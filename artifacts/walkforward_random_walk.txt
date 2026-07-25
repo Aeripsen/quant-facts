@@ -1,0 +1,20 @@
+walk-forward on data with no edge in it
+generated 2026-07-25 by walkforward_noise_demo.py
+
+8 seeded geometric random walks, 1600 bars each, the SPY artifact's exact configuration: rolling 756-bar train, 126-bar step, 9 SMA configurations re-searched per window, default costs.
+Every traded bar is out of sample for the pick that traded it, and there is nothing to find by construction, so the refit column is what walk-forward earns on pure luck: drift minus costs, not edge.
+
+ seed  win  rules  switch     refit  refit SR    frozen      hold
+    7    7      3       2     -1.7%     +0.03    +17.9%    +13.3%
+    4    7      4       3    -31.8%     -1.01    -45.1%    -23.2%
+    9    7      2       1    -16.2%     -0.45    -12.0%     -7.2%
+   13    7      1       0     +4.6%     +0.17     +4.6%    -19.4%
+   21    7      3       2    -14.6%     -0.37    -25.6%    -21.7%
+   33    7      4       4    -33.7%     -1.10    -20.9%    -13.0%
+   42    7      5       5    -32.3%     -1.01    -23.4%    -18.0%
+   55    7      2       1    +62.7%     +1.03    +66.8%    +48.3%
+
+refit Sharpe across seeds: min -1.10, mean -0.34, max +1.03 (centered near zero; single seeds swing wide, which is the point of printing all of them)
+picks changed at 0 to 5 of 6 boundaries per walk (SPY, same configuration: 3 of 13); winners on noise do not persist, so re-fitting keeps replacing them
+
+Read next to artifacts/selection_bias_random_walk.txt: the in-sample search there looks brilliant on the same walks until the corrections charge for it; the walk-forward line here never looked brilliant, because every reported bar was out of sample. Same data, same grid, honest scoring on both sides.
