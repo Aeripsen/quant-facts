@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use or refer to this software, please cite it as below."
+title: "quant-facts: read-only market analysis with an honest backtest harness"
+type: software
+authors:
+  - family-names: Jafari
+    given-names: Sepehr
+repository-code: "https://github.com/Aeripsen/quant-facts"
+license: MIT
+date-released: "2026-10-16"
+abstract: >-
+  A small toolkit that reports public daily price facts and standard indicators, and replays a
+  simple rule with next-bar execution, a chronological train/test split, costs, and a printed
+  account of what the parameter search cost (multiple-testing haircut, deflated Sharpe,
+  probability of backtest overfitting, walk-forward with a frozen control). A boundary in code
+  stops the tool from producing advice; the run fails rather than print it.
+keywords:
+  - backtesting
+  - overfitting
+  - multiple testing
+  - deflated sharpe ratio
+  - walk-forward
