@@ -13,6 +13,108 @@ thing: the money boundary is enforced by code that fails the run rather than
 emit advice, and the backtest harness prints its own caveats (look-ahead,
 costs, trials, survivorship) instead of hiding them.
 
+## The 3-minute version
+
+**What.** A backtest harness built to make its own overfitting visible, plus
+the plumbing around it (prices, indicators, headlines) and a boundary in code
+that stops the tool from ever saying what to do with money (next section).
+
+**The story.** Most backtests that look good are wrong in one of two quiet
+ways. They trade on information they could not have had yet (look-ahead), or
+they report the best of many tries as if it were the only try (uncounted
+trials). Neither shows up in the headline numbers. This harness closes the
+first in one line of code and turns the second into printed corrections.
+
+**Look-ahead, closed in one line.** In `backtest.py` the position on bar t is
+the signal from bar t-1:
+
+```python
+positions = [0] + [signal[t - 1] for t in range(1, len(series))]
+```
+
+`tests/test_backtest.py::test_no_look_ahead_jump_day_return_not_captured`
+builds a flat synthetic series with a +50% jump. The crossover fires on the
+jump bar, and the test asserts the strategy return on that bar is 0.0 while
+the market return is 0.5. A harness that traded the close it just observed
+would book the whole jump, and nothing in its Sharpe would look wrong.
+
+**Trials, counted and charged.** Every number below is copied from a committed
+run in `artifacts/`, and `tests/test_docs_numbers.py` fails if this page and
+those files disagree.
+
+- *SPY, ten years* (`artifacts/spy_10y_2026-07-21.txt`). The SMA(10) x
+  SMA(100) rule has a train Sharpe of 0.88. Scored as the only rule tried, the
+  haircut Sharpe stays 0.88. Scored honestly, as the winner of the
+  9-configuration search that produced it, the Bonferroni haircut takes it to
+  0.51 ("42% of it was the search"), BHY to 0.31, and the probability of
+  backtest overfitting (PBO) is 0.404.
+- *Pure noise* (`artifacts/selection_bias_random_walk.txt`). 8 seeded random
+  walks, 25 configurations searched on each. There is no signal by
+  construction, yet the winning train Sharpe reaches 1.11. At 25 trials the
+  Bonferroni haircut takes six of the seven positive winners to 0.00, and the
+  deflated Sharpe drops by 0.210 on average.
+- *Walk-forward* (`artifacts/walkforward_spy_10y_2026-07-22.txt` and
+  `artifacts/walkforward_random_walk.txt`). Re-picking the rule every 126 bars
+  changed it at 3 of 13 boundaries on SPY and finished 26.4 points behind
+  simply holding the first pick. On the noise walks the re-fit Sharpe averages
+  -0.34: walk-forward reports every bar out of sample, so there is no lucky
+  in-sample number to hide behind.
+
+**How a run flows.**
+
+```mermaid
+flowchart TD
+    A["analyze.py arguments"] -->|"question-shaped: should, what, ?"| X["compliance.refuse_advice<br/>advisor pointer only"]
+    A -->|tickers| D["data.py<br/>Yahoo chart API, CSV cache"]
+    D --> I["indicators.py<br/>SMA EMA RSI MACD Bollinger ATR"]
+    D --> B["backtest.py<br/>next-bar execution, chronological split, costs"]
+    B -->|"--optimize: every trial kept"| O["overfitting.py<br/>haircut, deflated Sharpe, PBO"]
+    B -->|"--walkforward"| W["walkforward.py<br/>rolling re-pick, refit vs frozen"]
+    N["news.py<br/>RSS, sanitized, quoted verbatim"] --> R["report assembly"]
+    I --> R
+    O --> R
+    W --> R
+    R --> G["compliance.guard<br/>banned-phrase scan"]
+    G -->|clean| S["stdout, ending with the advisor line"]
+    G -->|advisory phrasing| E["ComplianceError, nothing printed"]
+```
+
+**Quickstart, offline, no keys.**
+
+```
+git clone https://github.com/Aeripsen/quant-facts && cd quant-facts
+python -m pip install -r requirements.txt
+python -m pytest tests -q          # all offline and synthetic
+python walkforward_noise_demo.py   # about 6 seconds
+python selection_bias_demo.py      # about 70 seconds
+git diff --stat artifacts/
+```
+
+Both demos are seeded. Run on 2026-10-16, each rewrote its artifact
+identically except the "generated <date>" line, so the diff above should show
+one changed line per file. The SPY artifacts need the network and Yahoo's data
+as of their run date, which this repo does not ship (`cache/` is gitignored),
+so a SPY rerun today prints different numbers by design.
+
+**Limitations.**
+
+- One rule family (SMA crossover, long or flat), one ticker at a time. No
+  shorting, no portfolio, daily bars only.
+- Survivorship is named, not corrected: there is no delisted-ticker data.
+- Costs are flat basis-point estimates. No spread model, market impact,
+  taxes or FX.
+- Bonferroni and Holm are conservative when the configurations are
+  correlated, and neighbouring SMA windows are. BHY and the deflated Sharpe
+  are printed next to them; none of them is the true answer.
+- PBO needs at least two configurations and enough bars to split into blocks;
+  on short histories it prints n/a instead of a number.
+- The money boundary is a banned-phrase scan, so it is lexical. It holds
+  because the tool's own report lines are fixed templates and the tests scan
+  every source file, doc file and rendered report, not because it understands
+  language.
+- Prices come from Yahoo's public chart endpoint, which is unofficial and can
+  change or rate-limit without notice.
+
 ## The money boundary (read this first)
 
 This tool does NOT recommend what to trade, does NOT rate or rank tickers as
