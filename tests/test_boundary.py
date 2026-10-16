@@ -76,7 +76,10 @@ def test_report_carries_no_recommendation_vocabulary():
 
 def test_sources_and_docs_carry_no_advice_phrasing():
     files = sorted(ROOT.glob("*.py")) + sorted(ROOT.glob("tests/*.py"))
-    files += [ROOT / "README.md", ROOT / "RESEARCH.md"]
+    # every doc at the root, not a hand-kept list: a new CHANGELOG or
+    # CITATION is scanned the day it is added
+    files += sorted(ROOT.glob("*.md")) + sorted(ROOT.glob("*.cff"))
+    assert ROOT / "README.md" in files and ROOT / "RESEARCH.md" in files
     for path in files:
         low = path.read_text(encoding="utf-8").lower()
         for phrase in compliance.BANNED:
